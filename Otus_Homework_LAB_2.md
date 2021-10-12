@@ -60,8 +60,8 @@
 
 ## Схема сети
 
-![Схема сети](E:\Program\OTUS\DC_Design.PNG)
+![Схема сети](https://github.com/Condorrr85/OTUS/blob/main/DC_Design.PNG)
 
 ## Настройки
-
+[Настройки](https://github.com/Condorrr85/OTUS/tree/main/config)
 
