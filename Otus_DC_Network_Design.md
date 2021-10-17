@@ -127,14 +127,8 @@
 [Настройки](https://github.com/Condorrr85/OTUS/tree/main/config)
 
 ### Проверка доступности Loopback по Underlay OSPF сети на примере Leaf4
-
+```
 **Leaf4# show ip route ospf-1**
-IP Route Table for VRF "default"
-'*' denotes best ucast next-hop
-'**' denotes best mcast next-hop
-'[x/y]' denotes [preference/metric]
-'%<string>' in via output denotes VRF <string>
-
 **10.255.1.11/32**, ubest/mbest: 1/0
     *via **10.255.1.103, Eth1/1**, [110/131], 00:15:57, **ospf-1, intra**
 **10.255.1.12/32**, ubest/mbest: 1/0
@@ -148,4 +142,5 @@ IP Route Table for VRF "default"
 **10.255.1.103/32**, ubest/mbest: 1/0
     *via **10.255.1.103, Eth1/1**, [110/41], 00:15:57, **ospf-1, intra**
 **192.168.10.40/32**, ubest/mbest: 1/0
-    *via **10.255.1.103, Eth1/1**, [110/81], 00:15:57, **ospf-1, intra**
+    *via **10.255.1.103, Eth1/1**, [110/81], 00:15:57, **ospf-1, intra**`''
+```    
