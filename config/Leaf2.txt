@@ -1,12 +1,12 @@
 
 
 !Command: show running-config
-!Running configuration last done at: Sun Oct 17 20:19:58 2021
-!Time: Sun Oct 17 20:19:58 2021
+!Running configuration last done at: Sun Oct 17 20:25:13 2021
+!Time: Sun Oct 17 20:25:13 2021
 
 version 9.2(2) Bios:version  
-hostname Leaf1
-vdc Leaf1 id 1
+hostname Leaf2
+vdc Leaf2 id 1
   limit-resource vlan minimum 16 maximum 4094
   limit-resource vrf minimum 2 maximum 4096
   limit-resource port-channel minimum 0 maximum 511
@@ -17,13 +17,14 @@ vdc Leaf1 id 1
 
 cfs eth distribute
 feature ospf
+feature isis
 feature lacp
 feature vpc
 
-username admin password 5 $5$jjy935.3$H/oNZ/KgVhiToEM0Y2aeHQ7iFDAyIe4jJiIVNXcHbs/  role network-admin
+username admin password 5 $5$WYekTEVV$0e8WiOz4fG.Ob6kziEVVjwNFtXHMRQp7JPzCZvDL73D  role network-admin
 ip domain-lookup
 copp profile strict
-snmp-server user admin network-admin auth md5 0x0e4e0f168d1e6bc24ff23684e096f4de priv 0x0e4e0f168d1e6bc24ff23684e096f4de localizedkey
+snmp-server user admin network-admin auth md5 0xe46b51c513fb7d7f9977ca8d98355605 priv 0xe46b51c513fb7d7f9977ca8d98355605 localizedkey
 rmon event 1 description FATAL(1) owner PMON@FATAL
 rmon event 2 description CRITICAL(2) owner PMON@CRITICAL
 rmon event 3 description ERROR(3) owner PMON@ERROR
@@ -35,7 +36,7 @@ vlan 1
 vrf context VPC
 vrf context management
 vpc domain 1
-  peer-keepalive destination 172.16.1.2 source 172.16.1.1 vrf VPC
+  peer-keepalive destination 172.16.1.1 source 172.16.1.2 vrf VPC
 
 interface port-channel1
   switchport mode trunk
@@ -64,7 +65,7 @@ interface Ethernet1/2
 interface Ethernet1/3
   no switchport
   vrf member VPC
-  ip address 172.16.1.1/30
+  ip address 172.16.1.2/30
   no shutdown
 
 interface Ethernet1/4
@@ -327,14 +328,14 @@ interface mgmt0
   vrf member management
 
 interface loopback0
-  ip address 10.255.1.11/32
+  ip address 10.255.1.12/32
   ip router ospf 1 area 0.0.0.0
 cli alias name wr copy running-config startup-config
 line console
 line vty
 boot nxos bootflash:/nxos.9.2.2.bin 
 router ospf 1
-  router-id 10.255.1.11
+  router-id 10.255.1.12
 
 
 !

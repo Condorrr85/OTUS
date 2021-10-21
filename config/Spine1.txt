@@ -1,12 +1,12 @@
 
 
 !Command: show running-config
-!Running configuration last done at: Sun Oct 17 20:19:58 2021
-!Time: Sun Oct 17 20:19:58 2021
+!Running configuration last done at: Sun Oct 17 20:03:54 2021
+!Time: Sun Oct 17 20:03:54 2021
 
 version 9.2(2) Bios:version  
-hostname Leaf1
-vdc Leaf1 id 1
+hostname Spine1
+vdc Spine1 id 1
   limit-resource vlan minimum 16 maximum 4094
   limit-resource vrf minimum 2 maximum 4096
   limit-resource port-channel minimum 0 maximum 511
@@ -15,15 +15,12 @@ vdc Leaf1 id 1
   limit-resource m4route-mem minimum 58 maximum 58
   limit-resource m6route-mem minimum 8 maximum 8
 
-cfs eth distribute
 feature ospf
-feature lacp
-feature vpc
 
-username admin password 5 $5$jjy935.3$H/oNZ/KgVhiToEM0Y2aeHQ7iFDAyIe4jJiIVNXcHbs/  role network-admin
+username admin password 5 $5$kJiWSi87$O4vaer/aL1V8vaR1AyHCeTUWh9mHCGKO0TWXFzEcXh7  role network-admin
 ip domain-lookup
 copp profile strict
-snmp-server user admin network-admin auth md5 0x0e4e0f168d1e6bc24ff23684e096f4de priv 0x0e4e0f168d1e6bc24ff23684e096f4de localizedkey
+snmp-server user admin network-admin auth md5 0x2d06f73d2b9e5402a0cdcce13d433d88 priv 0x2d06f73d2b9e5402a0cdcce13d433d88 localizedkey
 rmon event 1 description FATAL(1) owner PMON@FATAL
 rmon event 2 description CRITICAL(2) owner PMON@CRITICAL
 rmon event 3 description ERROR(3) owner PMON@ERROR
@@ -32,18 +29,7 @@ rmon event 5 description INFORMATION(5) owner PMON@INFO
 
 vlan 1
 
-vrf context VPC
 vrf context management
-vpc domain 1
-  peer-keepalive destination 172.16.1.2 source 172.16.1.1 vrf VPC
-
-interface port-channel1
-  switchport mode trunk
-  spanning-tree port type network
-  vpc peer-link
-
-interface port-channel2
-  switchport mode trunk
 
 interface Ethernet1/1
   no switchport
@@ -63,21 +49,23 @@ interface Ethernet1/2
 
 interface Ethernet1/3
   no switchport
-  vrf member VPC
-  ip address 172.16.1.1/30
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
   no shutdown
 
 interface Ethernet1/4
-  switchport mode trunk
-  channel-group 1 mode active
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
 
 interface Ethernet1/5
-  switchport mode trunk
-  channel-group 2 mode active
 
 interface Ethernet1/6
-  switchport mode trunk
-  channel-group 1 mode active
 
 interface Ethernet1/7
 
@@ -327,14 +315,14 @@ interface mgmt0
   vrf member management
 
 interface loopback0
-  ip address 10.255.1.11/32
+  ip address 10.255.1.101/32
   ip router ospf 1 area 0.0.0.0
 cli alias name wr copy running-config startup-config
 line console
 line vty
 boot nxos bootflash:/nxos.9.2.2.bin 
 router ospf 1
-  router-id 10.255.1.11
+  router-id 10.255.1.101
 
 
 !
