@@ -70,7 +70,7 @@
 
 ## План работ
 
-- настроить OSPF в Underlay сети, для IP связанности между всеми устройствами NXOS
+- настроить протокол OSPF в качестве протокола маршрутизации Underlay сети для IP связанности между всеми устройствами NXOS
 - Проверка работы протокола OSPF и доступности адресов Loopback
 
 
@@ -124,7 +124,7 @@
 
 ## Настройка Underlay сети OSPF
 
-[Настройки](https://github.com/Condorrr85/OTUS/tree/main/config)
+[Настройки](https://github.com/Condorrr85/OTUS/tree/main/config/OSPF%20Underlay)
 
 ### Проверка доступности Loopback по Underlay OSPF сети на примере Leaf4
 ```
@@ -144,3 +144,84 @@ Leaf4# show ip route ospf-1
 192.168.10.40/32, ubest/mbest: 1/0
     *via 10.255.1.103, Eth1/1, [110/81], 00:15:57, ospf-1, intra
 ```    
+
+# Построение Underlay сети(IS-IS) 
+## _Домашнее задание №3_
+
+## План работ
+
+- настроить протокол IS-IS в качестве протокола маршрутизации Underlay сети  для IP связанности между всеми устройствами NXOS
+- Проверка IS-IS adjacency на LEAF коммутаторах
+- Проверка  доступности адресов Loopback на примере коммутатора Leaf4
+
+
+## Настройка протокола IS-IS в качестве протокола маршрутизации Underlay сети
+
+[Настройки](https://github.com/Condorrr85/OTUS/tree/main/config/IS-IS%20Underlay)
+
+### Проверка IS-IS adjacency на LEAF коммутаторах
+
+``` 
+Leaf1# show isis adjacency
+IS-IS process: 1 VRF: default
+IS-IS adjacency database:
+Legend: '!': No AF level connectivity in given topology
+System ID       SNPA            Level  State  Hold Time  Interface
+Spine1          N/A             2      UP     00:00:31   Ethernet1/1
+Spine2          N/A             2      UP     00:00:29   Ethernet1/2
+``` 
+
+``` 
+Leaf2# show isis adjacency
+IS-IS process: 1 VRF: default
+IS-IS adjacency database:
+Legend: '!': No AF level connectivity in given topology
+System ID       SNPA            Level  State  Hold Time  Interface
+Spine1          N/A             2      UP     00:00:26   Ethernet1/1
+Spine2          N/A             2      UP     00:00:32   Ethernet1/2
+``` 
+
+``` 
+Leaf3# show isis adjacency
+IS-IS process: 1 VRF: default
+IS-IS adjacency database:
+Legend: '!': No AF level connectivity in given topology
+System ID       SNPA            Level  State  Hold Time  Interface
+Spine1          N/A             2      UP     00:00:32   Ethernet1/1
+Spine2          N/A             2      UP     00:00:30   Ethernet1/2
+``` 
+
+```
+Leaf4# show isis adjacency
+IS-IS process: 1 VRF: default
+IS-IS adjacency database:
+Legend: '!': No AF level connectivity in given topology
+System ID       SNPA            Level  State  Hold Time  Interface
+Spine3          N/A             2      UP     00:00:28   Ethernet1/1
+```
+
+### Проверка  доступности адресов Loopback на примере коммутатора Leaf4
+```
+Leaf4# show ip route isis-1
+IP Route Table for VRF "default"
+'*' denotes best ucast next-hop
+'**' denotes best mcast next-hop
+'[x/y]' denotes [preference/metric]
+'%<string>' in via output denotes VRF <string>
+
+10.255.1.11/32, ubest/mbest: 1/0
+    *via 10.255.1.103, Eth1/1, [115/131], 00:23:06, isis-1, L2
+10.255.1.12/32, ubest/mbest: 1/0
+    *via 10.255.1.103, Eth1/1, [115/131], 00:23:06, isis-1, L2
+10.255.1.13/32, ubest/mbest: 1/0
+    *via 10.255.1.103, Eth1/1, [115/131], 00:23:06, isis-1, L2
+10.255.1.101/32, ubest/mbest: 1/0
+    *via 10.255.1.103, Eth1/1, [115/91], 00:23:06, isis-1, L2
+10.255.1.102/32, ubest/mbest: 1/0
+    *via 10.255.1.103, Eth1/1, [115/91], 00:23:06, isis-1, L2
+10.255.1.103/32, ubest/mbest: 1/0
+    *via 10.255.1.103, Eth1/1, [115/41], 00:23:07, isis-1, L2
+     via 10.255.1.103, Eth1/1, [250/0], 00:23:11, am
+192.168.10.40/32, ubest/mbest: 1/0
+    *via 10.255.1.103, Eth1/1, [115/90], 00:23:06, isis-1, L2
+```
