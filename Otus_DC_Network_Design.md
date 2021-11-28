@@ -1,10 +1,11 @@
-# Содержание:
-    1. [Технологии построения фабрик](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8-%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D1%8F-%D1%84%D0%B0%D0%B1%D1%80%D0%B8%D0%BA)
-    2. [Построение Underlay сети(OSPF)](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D0%B5-underlay-%D1%81%D0%B5%D1%82%D0%B8ospf)
-    3. [Построение Underlay сети(IS-IS)](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D0%B5-underlay-%D1%81%D0%B5%D1%82%D0%B8is-is)
-    4. [Построение Underlay сети(BGP)](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D0%B5-underlay-%D1%81%D0%B5%D1%82%D0%B8bgp) 
+# Дизайн сетей ЦОД
+## Содержание:
+  1. [Технологии построения фабрик](#https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8-%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D1%8F-%D1%84%D0%B0%D0%B1%D1%80%D0%B8%D0%BA)
+2. [Построение Underlay сети(OSPF)](#https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D0%B5-underlay-%D1%81%D0%B5%D1%82%D0%B8ospf)
+3. [Построение Underlay сети(IS-IS)](#https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D0%B5-underlay-%D1%81%D0%B5%D1%82%D0%B8is-is)
+4. [Построение Underlay сети(BGP)](#https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D0%B5-underlay-%D1%81%D0%B5%D1%82%D0%B8bgp)
 
-# Технологии построения фабрик
+# Технологии построения фабрик 
 
 ## _Домашнее задание №1_
 
@@ -67,7 +68,7 @@
 
 ## Схема сети
 
-![Схема сети](https://github.com/Condorrr85/OTUS/blob/main/DC_Design.PNG)
+[Схема сети](https://github.com/Condorrr85/OTUS/blob/main/DC_Design.PNG)
 
 ## Настройки
 [Настройки](https://github.com/Condorrr85/OTUS/tree/main/config)
