@@ -1,0 +1,113 @@
+
+!
+! Last configuration change at 21:55:22 EET Sat Nov 20 2021
+!
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+service compress-config
+!
+hostname NXOS_Interconnect
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+clock timezone EET 2 0
+!
+!
+!
+!
+!
+!
+!
+!
+ip cef
+no ipv6 cef
+!
+!
+spanning-tree mode pvst
+spanning-tree extend system-id
+!
+vlan internal allocation policy ascending
+!
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ no shutdown
+ ip address 192.168.10.40 255.255.255.255
+!
+interface Ethernet0/0
+ no shutdown
+ no switchport
+ ip address 10.2.1.1 255.255.255.254
+!
+interface Ethernet0/1
+ no shutdown
+ no switchport
+ ip address 10.2.2.1 255.255.255.254
+!
+interface Ethernet0/2
+ no shutdown
+ no switchport
+ ip address 10.2.3.1 255.255.255.254
+!
+interface Ethernet0/3
+ no shutdown
+!
+router bgp 65508
+ bgp router-id 192.168.10.40
+ bgp log-neighbor-changes
+ neighbor 10.2.1.0 remote-as 65501
+ neighbor 10.2.1.0 description Spine1
+ neighbor 10.2.1.0 password Gfhjkmyfwbcre1
+ neighbor 10.2.1.0 timers 3 9
+ neighbor 10.2.2.0 remote-as 65501
+ neighbor 10.2.2.0 password Gfhjkmyfwbcre1
+ neighbor 10.2.2.0 timers 3 9
+ neighbor 10.2.3.0 remote-as 65501
+ neighbor 10.2.3.0 password Gfhjkmyfwbcre1
+ neighbor 10.2.3.0 timers 3 9
+ !
+ address-family ipv4
+  redistribute connected
+  redistribute static
+  neighbor 10.2.1.0 activate
+  neighbor 10.2.2.0 activate
+  neighbor 10.2.3.0 activate
+ exit-address-family
+!
+ip forward-protocol nd
+!
+no ip http server
+no ip http secure-server
+!
+!
+!
+!
+!
+!
+control-plane
+!
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ login
+!
+!
+end
