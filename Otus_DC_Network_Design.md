@@ -350,10 +350,10 @@ Origin codes: i - IGP, e - EGP, ? - incomplete, | - multipath, & - backup, 2 - b
 *>e192.168.10.40/32   10.2.1.1                 0                     0 65508 ?
 ``` 
 
-### Проверка  доступности адресов Loopback и сетей PtP на примере коммутатора Leaf4
+### Проверка  доступности адресов Loopback и сетей PtP на примере коммутатора Leaf1
 
 ``` 
-Leaf4# show ip route
+Leaf1# show ip route
 IP Route Table for VRF "default"
 '*' denotes best ucast next-hop
 '**' denotes best mcast next-hop
@@ -361,56 +361,68 @@ IP Route Table for VRF "default"
 '%<string>' in via output denotes VRF <string>
 
 10.2.1.0/31, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
-10.2.1.2/31, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
+    *via 10.2.1.2, [20/0], 2w0d, bgp-65511, external, tag 65501
+10.2.1.2/31, ubest/mbest: 1/0, attached
+    *via 10.2.1.3, Eth1/1, [0/0], 2w0d, direct
+10.2.1.3/32, ubest/mbest: 1/0, attached
+    *via 10.2.1.3, Eth1/1, [0/0], 2w0d, local
 10.2.1.4/31, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
+    *via 10.2.1.2, [20/0], 2w0d, bgp-65511, external, tag 65501
 10.2.1.6/31, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
+    *via 10.2.1.2, [20/0], 2w0d, bgp-65511, external, tag 65501
 10.2.2.0/31, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
-10.2.2.2/31, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
+    *via 10.2.2.2, [20/0], 2w0d, bgp-65511, external, tag 65501
+10.2.2.2/31, ubest/mbest: 1/0, attached
+    *via 10.2.2.3, Eth1/2, [0/0], 2w0d, direct
+10.2.2.3/32, ubest/mbest: 1/0, attached
+    *via 10.2.2.3, Eth1/2, [0/0], 2w0d, local
 10.2.2.4/31, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
+    *via 10.2.2.2, [20/0], 2w0d, bgp-65511, external, tag 65501
 10.2.2.6/31, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
-10.2.3.0/31, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
-10.2.3.2/31, ubest/mbest: 1/0, attached
-    *via 10.2.3.3, Eth1/1, [0/0], 1w0d, direct
-10.2.3.3/32, ubest/mbest: 1/0, attached
-    *via 10.2.3.3, Eth1/1, [0/0], 1w0d, local
-10.255.1.11/32, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
-10.255.1.12/32, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
-10.255.1.13/32, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
-10.255.1.14/32, ubest/mbest: 2/0, attached
-    *via 10.255.1.14, Lo0, [0/0], 1w1d, local
-    *via 10.255.1.14, Lo0, [0/0], 1w1d, direct
+    *via 10.2.2.2, [20/0], 2w0d, bgp-65511, external, tag 65501
+10.2.3.0/31, ubest/mbest: 2/0
+    *via 10.2.1.2, [20/0], 2w0d, bgp-65511, external, tag 65501
+    *via 10.2.2.2, [20/0], 2w0d, bgp-65511, external, tag 65501
+10.2.3.2/31, ubest/mbest: 2/0
+    *via 10.2.1.2, [20/0], 00:16:44, bgp-65511, external, tag 65501
+    *via 10.2.2.2, [20/0], 00:16:44, bgp-65511, external, tag 65501
+10.255.1.11/32, ubest/mbest: 2/0, attached
+    *via 10.255.1.11, Lo0, [0/0], 2w1d, local
+    *via 10.255.1.11, Lo0, [0/0], 2w1d, direct
+10.255.1.12/32, ubest/mbest: 2/0
+    *via 10.2.1.2, [20/0], 2w0d, bgp-65511, external, tag 65501
+    *via 10.2.2.2, [20/0], 2w0d, bgp-65511, external, tag 65501
+10.255.1.13/32, ubest/mbest: 2/0
+    *via 10.2.1.2, [20/0], 2w0d, bgp-65511, external, tag 65501
+    *via 10.2.2.2, [20/0], 2w0d, bgp-65511, external, tag 65501
+10.255.1.14/32, ubest/mbest: 2/0
+    *via 10.2.1.2, [20/0], 00:13:43, bgp-65511, external, tag 65501
+    *via 10.2.2.2, [20/0], 00:13:43, bgp-65511, external, tag 65501
 10.255.1.101/32, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
+    *via 10.2.1.2, [20/0], 2w0d, bgp-65511, external, tag 65501
 10.255.1.102/32, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
-10.255.1.103/32, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
-192.168.10.40/32, ubest/mbest: 1/0
-    *via 10.2.3.2, [20/0], 1w0d, bgp-65514, external, tag 65501
+    *via 10.2.2.2, [20/0], 2w0d, bgp-65511, external, tag 65501
+10.255.1.103/32, ubest/mbest: 2/0
+    *via 10.2.1.2, [20/0], 00:16:44, bgp-65511, external, tag 65501
+    *via 10.2.2.2, [20/0], 00:16:44, bgp-65511, external, tag 65501
+192.168.10.40/32, ubest/mbest: 2/0
+    *via 10.2.1.2, [20/0], 2w0d, bgp-65511, external, tag 65501
+    *via 10.2.2.2, [20/0], 2w0d, bgp-65511, external, tag 65501
+
+
 
 ``` 
 ```
-Leaf4#  ping 10.255.1.101
-PING 10.255.1.101 (10.255.1.101): 56 data bytes
-64 bytes from 10.255.1.101: icmp_seq=0 ttl=252 time=62.814 ms
-64 bytes from 10.255.1.101: icmp_seq=1 ttl=252 time=10.606 ms
-64 bytes from 10.255.1.101: icmp_seq=2 ttl=252 time=11.359 ms
-64 bytes from 10.255.1.101: icmp_seq=3 ttl=252 time=30.902 ms
-64 bytes from 10.255.1.101: icmp_seq=4 ttl=252 time=8.481 ms
+Leaf1#  ping 10.255.1.14
+PING 10.255.1.14 (10.255.1.14): 56 data bytes
+64 bytes from 10.255.1.14: icmp_seq=0 ttl=251 time=35.672 ms
+64 bytes from 10.255.1.14: icmp_seq=1 ttl=251 time=17.902 ms
+64 bytes from 10.255.1.14: icmp_seq=2 ttl=251 time=31.25 ms
+64 bytes from 10.255.1.14: icmp_seq=3 ttl=251 time=21.297 ms
+64 bytes from 10.255.1.14: icmp_seq=4 ttl=251 time=24.48 ms
 
---- 10.255.1.101 ping statistics ---
+--- 10.255.1.14 ping statistics ---
 5 packets transmitted, 5 packets received, 0.00% packet loss
-round-trip min/avg/max = 8.481/24.832/62.814 ms
+round-trip min/avg/max = 17.902/26.12/35.672 ms
+
 ```
