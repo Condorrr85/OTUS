@@ -1,6 +1,6 @@
 
 !
-! Last configuration change at 21:55:22 EET Sat Nov 20 2021
+! Last configuration change at 20:58:54 EET Sun Dec 5 2021
 !
 version 15.2
 service timestamps debug datetime msec
@@ -78,7 +78,7 @@ router bgp 65508
  neighbor 10.2.2.0 remote-as 65501
  neighbor 10.2.2.0 password Gfhjkmyfwbcre1
  neighbor 10.2.2.0 timers 3 9
- neighbor 10.2.3.0 remote-as 65501
+ neighbor 10.2.3.0 remote-as 65502
  neighbor 10.2.3.0 password Gfhjkmyfwbcre1
  neighbor 10.2.3.0 timers 3 9
  !

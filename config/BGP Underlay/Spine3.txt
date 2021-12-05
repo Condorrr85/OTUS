@@ -1,8 +1,8 @@
 
 
 !Command: show running-config
-!Running configuration last done at: Sun Nov 28 19:22:28 2021
-!Time: Sun Nov 28 19:22:28 2021
+!Running configuration last done at: Sun Dec  5 19:35:23 2021
+!Time: Sun Dec  5 19:35:23 2021
 
 version 9.2(2) Bios:version  
 hostname Spine3
@@ -309,7 +309,7 @@ cli alias name wr copy running-config startup-config
 line console
 line vty
 boot nxos bootflash:/nxos.9.2.2.bin 
-router bgp 65501
+router bgp 65502
   address-family ipv4 unicast
     redistribute direct route-map direct
   template peer Leaf
