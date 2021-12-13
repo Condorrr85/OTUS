@@ -4,6 +4,7 @@
 2. [Построение Underlay сети(OSPF)](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D0%B5-underlay-%D1%81%D0%B5%D1%82%D0%B8ospf)
 3. [Построение Underlay сети(IS-IS)](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D0%B5-underlay-%D1%81%D0%B5%D1%82%D0%B8is-is)
 4. [Построение Underlay сети(BGP)](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D0%B5-underlay-%D1%81%D0%B5%D1%82%D0%B8bgp)
+5. [Multicast PIM (Sparse)](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D0%B5-underlay-%D1%81%D0%B5%D1%82%D0%B8bgp)
 
 # Технологии построения фабрик 
 
@@ -425,4 +426,273 @@ PING 10.255.1.14 (10.255.1.14): 56 data bytes
 5 packets transmitted, 5 packets received, 0.00% packet loss
 round-trip min/avg/max = 17.902/26.12/35.672 ms
 
+```
+
+# Multicast PIM (Sparse) 
+## _Домашнее задание №5_
+
+## План работ
+
+- Настроите PIM на всех устройствах (кроме коммутаторов доступа);
+  *Для IP связанности между устройствами можно использовать любой протокол динамической маршрутизации;
+- Проверка состояния PIM связности между всеми устройствами сети (кроме коммутаторов доступа)
+- проверка настройки bsr/rp для устройств сети
+- Проверка  наличия IGMP Join запросов от клиентов на подключение к Multicast группе
+- Проверка наличия мультикаст маршрутов соответствующей группы: {*.G} и {S.G} нотации.
+
+## Схема сети
+
+[Схема сети](https://github.com/Condorrr85/OTUS/blob/main/OTUS%20Multicast%20PIM.PNG)
+
+## таблица ip-адресов
+
+| Device | Interface | IP address | Subnet mask |  
+| ----------- | ----------- | ----------- | ----------- |
+| SPINE1 | E1/1 | IP unnumbered |  |
+| | E1/2 | IP unnumbered |  |
+|  | E1/3 | IP unnumbered |  |
+|  | E1/4 | IP unnumbered |  |
+|  | Lo0 | 10.255.1.101 | 255.255.255.255 |
+| SPINE2 | E1/1 | IP unnumbered | |
+| | E1/2 | IP unnumbered |  |
+|  | E1/3 | IP unnumbered |  |
+|  | E1/4 | IP unnumbered |  |
+|  | Lo0 | 10.255.1.102 | 255.255.255.255 |
+| SPINE3 | E1/1 | IP unnumbered | |
+| | E1/2 | IP unnumbered |  |
+| | Lo0 | 10.255.1.103 | 255.255.255.255 |
+| LEAF1 | E1/1 | IP unnumbered | |
+|  | E1/2 | IP unnumbered |  |
+|  | E1/3 | 172.16.1.1 | 255.255.255.252 |
+|  | E1/4 | Port-channel1 |  |
+|  | E1/5 | MCLAG to Client1 |  |
+|  | E1/6 | Port-channel1 |  |
+|  | E1/7 | 10.10.120.254 | 255.255.255.0 |
+|  | Po1 | VPC peer-link |  |
+|  | Lo0 | 10.255.1.11 | 255.255.255.255 |
+| LEAF2 | E1/1 | IP unnumbered |  |
+|  | E1/2 | IP unnumbered ||
+|  | E1/3 | 172.16.1.2 | 255.255.255.252 |
+|  | E1/4 | Port-channel1 |  |
+|  | E1/5 | MCLAG to Client1 | |
+|  | E1/6 | Port-channel1 |  |
+| | Po1 | VPC peer-link |  |
+| | Lo0 | 10.255.1.12 | 255.255.255.255 |
+| LEAF3 | E1/1 | IP unnumbered |  |
+|  | E1/2 | IP unnumbered |  |
+|  | E1/3 | 10.10.100.254 | 255.255.255.0 |
+| | Lo0 | 10.255.1.13 | 255.255.255.255 |
+| LEAF4 | E1/1 | IP unnumbered |  |
+| | E1/2 | 10.10.110.254 | 255.255.255.0 |
+| | Lo0 | 10.255.1.14 | 255.255.255.255 |
+| Client1 | E0/0 | Port-channel 1 |  |
+| | E0/1 | Port-channel 1 | |
+| | Po1 | Trunk to VPC(Leaf1\Leaf2) |  |
+| Client2 | E0/0 | Trunk to Leaf3 | - |
+|  | E0/1 | Access to Multicast source | vlan 100 |
+| Client3 | E0/0 | Trunk to Leaf4 | - |
+
+### Настройка Multicast PIM (Sparse) на всех устройствах сети(кроме коммутаторов доступа)
+[Настройки](https://github.com/Condorrr85/OTUS/tree/main/config/Multicast%20PIM(Sparse))
+
+
+### Проверка состояния PIM связности между всеми устройствами сети
+
+```
+Spine1# show ip pim neighbor
+PIM Neighbor Status for VRF "default"
+Neighbor        Interface            Uptime    Expires   DR       Bidir-  BFD
+ ECMP Redirect
+                                                         Priority Capable State
+    Capable
+192.168.10.40   Ethernet1/1          06:33:13  00:01:39  1        no     n/a
+ no
+10.255.1.11     Ethernet1/2          00:55:50  00:01:27  1        yes     n/a
+  no
+10.255.1.12     Ethernet1/3          00:56:12  00:01:31  1        yes     n/a
+  no
+10.255.1.13     Ethernet1/4          06:33:12  00:01:28  1        yes     n/a 
+  no
+```
+```
+Spine2# show ip pim neighbor
+PIM Neighbor Status for VRF "default"
+Neighbor        Interface            Uptime    Expires   DR       Bidir-  BFD
+ ECMP Redirect
+                                                         Priority Capable State
+    Capable
+192.168.10.40   Ethernet1/1          06:34:29  00:01:27  1        no     n/a
+ no
+10.255.1.11     Ethernet1/2          00:57:03  00:01:40  1        yes     n/a
+  no
+10.255.1.12     Ethernet1/3          00:57:24  00:01:42  1        yes     n/a
+  no
+10.255.1.13     Ethernet1/4          06:34:26  00:01:24  1        yes     n/a
+  no
+```
+```
+Spine3# show ip pim neighbor
+PIM Neighbor Status for VRF "default"
+Neighbor        Interface            Uptime    Expires   DR       Bidir-  BFD
+ ECMP Redirect
+                                                         Priority Capable State
+    Capable
+192.168.10.40   Ethernet1/1          06:35:11  00:01:17  1        no     n/a
+ no
+10.255.1.14     Ethernet1/2          06:34:50  00:01:24  1        yes     n/a
+  no
+```
+### проверка настройки bsr/rp для устройств сети
+```
+Spine1# show run pim
+!Command: show running-config pim
+!Running configuration last done at: Mon Dec 13 18:43:33 2021
+!Time: Mon Dec 13 20:17:11 2021
+
+version 9.2(2) Bios:version
+feature pim
+
+ip pim bsr bsr-candidate loopback0 priority 90
+ip pim bsr rp-candidate loopback0 group-list 224.0.0.0/4 priority 90
+ip pim log-neighbor-changes
+ip pim ssm range 232.0.0.0/8
+ip pim bsr forward listen
+
+
+interface loopback0
+  ip pim sparse-mode
+
+interface Ethernet1/1
+  ip pim sparse-mode
+
+interface Ethernet1/2
+  ip pim sparse-mode
+
+interface Ethernet1/3
+  ip pim sparse-mode
+
+interface Ethernet1/4
+  ip pim sparse-mode
+```
+```
+NXOS_Interconnect#show run
+Building configuration...
+
+Current configuration : 1389 bytes
+!
+! Last configuration change at 20:46:09 EET Mon Dec 13 2021
+!
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+service compress-config
+!
+hostname NXOS_Interconnect
+!
+
+ip pim bsr-candidate Loopback0 32 100
+ip pim rp-candidate Loopback0 priority 100
+```
+```
+Spine2# show run pim
+!Command: show running-config pim
+!Running configuration last done at: Mon Dec 13 18:45:29 2021
+!Time: Mon Dec 13 20:19:31 2021
+
+version 9.2(2) Bios:version
+feature pim
+
+ip pim bsr bsr-candidate loopback0 priority 90
+ip pim bsr rp-candidate loopback0 group-list 224.0.0.0/4 priority 90
+ip pim log-neighbor-changes
+ip pim ssm range 232.0.0.0/8
+ip pim bsr forward listen
+
+interface loopback0
+  ip pim sparse-mode
+
+interface Ethernet1/1
+  ip pim sparse-mode
+
+interface Ethernet1/2
+  ip pim sparse-mode
+
+interface Ethernet1/3
+  ip pim sparse-mode
+
+interface Ethernet1/4
+  ip pim sparse-mode
+
+```
+### Проверка  наличия IGMP Join запросов от клиентов на подключение к Multicast группе
+```
+Leaf1# show ip igmp groups
+IGMP Connected Group Membership for VRF "default" - 1 total entries
+Type: S - Static, D - Dynamic, L - Local, T - SSM Translated, H - Host Proxy
+      * - Cache Only
+Group Address      Type Interface              Uptime    Expires   Last Reporter
+239.0.0.100        L   Ethernet1/7            00:53:12  never     10.10.120.254
+
+```
+```
+Leaf4# show ip igmp groups
+IGMP Connected Group Membership for VRF "default" - 1 total entries
+Type: S - Static, D - Dynamic, L - Local, T - SSM Translated, H - Host Proxy
+      * - Cache Only
+Group Address      Type Interface              Uptime    Expires   Last Reporter
+239.0.0.100        L   Ethernet1/2            06:41:13  never     10.10.110.254
+
+```
+### Проверка наличия мультикаст маршрутов соответствующей группы: {*.G} и {S.G} нотации.
+```
+Leaf4# show ip mroute
+IP Multicast Routing Table for VRF "default"
+(*, 232.0.0.0/8), uptime: 06:47:03, pim ip
+  Incoming interface: Null, RPF nbr: 0.0.0.0
+  Outgoing interface list: (count: 0)
+
+(*, 239.0.0.100/32), uptime: 06:45:25, igmp ip pim
+  Incoming interface: Ethernet1/1, RPF nbr: 10.255.1.103
+  Outgoing interface list: (count: 1)
+    Ethernet1/2, uptime: 06:45:25, igmp
+
+(10.10.100.1/32, 239.0.0.100/32), uptime: 01:28:29, ip mrib pim
+  Incoming interface: Ethernet1/1, RPF nbr: 10.255.1.103
+  Outgoing interface list: (count: 1)
+    Ethernet1/2, uptime: 01:28:29, mrib
+```
+```
+Leaf1# show ip mroute
+IP Multicast Routing Table for VRF "default"
+(*, 232.0.0.0/8), uptime: 01:10:39, pim ip
+  Incoming interface: Null, RPF nbr: 0.0.0.0
+  Outgoing interface list: (count: 0)
+
+(*, 239.0.0.100/32), uptime: 00:59:17, igmp ip pim
+  Incoming interface: Ethernet1/1, RPF nbr: 10.255.1.101
+  Outgoing interface list: (count: 1)
+    Ethernet1/7, uptime: 00:59:17, igmp
+
+(10.10.100.1/32, 239.0.0.100/32), uptime: 00:59:17, ip mrib pim
+  Incoming interface: Ethernet1/2, RPF nbr: 10.255.1.102
+  Outgoing interface list: (count: 1)
+    Ethernet1/7, uptime: 00:59:17, mrib
+```
+```
+Spine1# show ip mroute
+IP Multicast Routing Table for VRF "default"
+(*, 232.0.0.0/8), uptime: 06:49:12, pim ip
+  Incoming interface: Null, RPF nbr: 0.0.0.0
+  Outgoing interface list: (count: 0)
+
+(*, 239.0.0.100/32), uptime: 01:32:28, pim ip
+  Incoming interface: loopback0, RPF nbr: 10.255.1.101
+  Outgoing interface list: (count: 2)
+    Ethernet1/2, uptime: 01:00:18, pim
+    Ethernet1/1, uptime: 01:32:28, pim
+
+(10.10.100.1/32, 239.0.0.100/32), uptime: 01:30:30, pim mrib ip
+  Incoming interface: Ethernet1/4, RPF nbr: 10.255.1.13, internal
+  Outgoing interface list: (count: 0)
 ```
