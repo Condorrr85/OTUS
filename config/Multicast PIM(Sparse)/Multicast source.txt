@@ -1,0 +1,17 @@
+root@ubuntu:~# cat /etc/network/interfaces
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The network interface for multicasting
+auto ens3
+iface ens3  inet static
+        address 10.10.100.1
+        netmask 255.255.255.0
+        gateway 10.10.100.254
+
