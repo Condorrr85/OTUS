@@ -5,7 +5,7 @@
 3. [Построение Underlay сети(IS-IS)](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D0%B5-underlay-%D1%81%D0%B5%D1%82%D0%B8is-is)
 4. [Построение Underlay сети(BGP)](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D0%B5-underlay-%D1%81%D0%B5%D1%82%D0%B8bgp)
 5. [Multicast PIM (Sparse)](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#multicast-pim-sparse)
-
+6. [VXLAN/Multicast]()
 # Технологии построения фабрик 
 
 ## _Домашнее задание №1_
@@ -695,4 +695,309 @@ IP Multicast Routing Table for VRF "default"
 (10.10.100.1/32, 239.0.0.100/32), uptime: 01:30:30, pim mrib ip
   Incoming interface: Ethernet1/4, RPF nbr: 10.255.1.13, internal
   Outgoing interface list: (count: 0)
+```
+# VXLAN/Multicast
+## _Домашнее задание №5.1_
+
+## План работ
+
+- Настроите PIM на всех устройствах (кроме коммутаторов доступа);
+  *Для IP связанности между устройствами можно использовать любой протокол динамической маршрутизации;
+- Настроить Anycast RP и Pim bi-direct для корректной работы VXLAN с Multicast
+- Настройка VXLAN: Настройка Vlan, vlan-to-VXLAN mapping, настройка nve интерфейса на VTEP, настройка multicast group для VNI
+- Проверка корректной работы VXLAN через multicast (наличие нужной multucast group в {*,G} и {S,G} нотациях, проверка активности nve peers, пинг между клиентами в широковещательном домене, подключенные к разных leaf коммутаторам и разным Spine)
+
+## Vlan\VNI mapping
+| Device | Interface | Vlan | IP-адрес  | VNI  |
+| ----------- | ----------- | ----------- | ----------- |----------- |
+| Client1 | Port-channel 1 | Vlan 100 | 10.10.100.10/24  | 8000 | 
+| Client2 | E0/0 | Vlan 100 | 10.10.100.15/24 | 8000 |
+
+### Настройка VXLAN с использованием Multicast
+[Настройки](https://github.com/Condorrr85/OTUS/tree/main/config/VXLAN%20via%20Multicast)
+
+### Проверка настройки PIM/Anycast RP для Leaf/Spine коммутаторов
+```
+Leaf1# show run pim
+
+!Command: show running-config pim
+!Running configuration last done at: Sun Dec 26 19:08:25 2021
+!Time: Sun Dec 26 21:27:10 2021
+
+version 9.2(2) Bios:version
+feature pim
+
+ip pim rp-address 10.1.1.1 group-list 239.1.1.0/24 bidir
+ip pim log-neighbor-changes
+ip pim ssm range 232.0.0.0/8
+
+
+interface loopback0
+  ip pim sparse-mode
+
+interface loopback1
+  ip pim sparse-mode
+
+interface Ethernet1/1
+  ip pim sparse-mode
+
+interface Ethernet1/2
+  ip pim sparse-mode
+
+```
+```
+Leaf2# show run pim
+
+!Command: show running-config pim
+!Running configuration last done at: Sun Dec 26 19:07:56 2021
+!Time: Sun Dec 26 21:27:37 2021
+
+version 9.2(2) Bios:version
+feature pim
+
+ip pim rp-address 10.1.1.1 group-list 239.1.1.0/24 bidir
+ip pim log-neighbor-changes
+ip pim ssm range 232.0.0.0/8
+
+
+interface loopback0
+  ip pim sparse-mode
+
+interface loopback1
+  ip pim sparse-mode
+
+interface Ethernet1/1
+  ip pim sparse-mode
+
+interface Ethernet1/2
+  ip pim sparse-mode
+
+```
+```
+Spine1# show run pim
+
+!Command: show running-config pim
+!Running configuration last done at: Sun Dec 26 19:13:47 2021
+!Time: Sun Dec 26 21:28:37 2021
+
+version 9.2(2) Bios:version
+feature pim
+
+ip pim rp-address 10.1.1.1 group-list 239.1.1.0/24 bidir
+ip pim log-neighbor-changes
+ip pim ssm range 232.0.0.0/8
+ip pim anycast-rp 10.1.1.1 10.255.1.101
+ip pim anycast-rp 10.1.1.1 10.255.1.102
+ip pim anycast-rp 10.1.1.1 10.255.1.103
+
+
+interface loopback0
+  ip pim sparse-mode
+
+interface loopback1
+  ip pim sparse-mode
+
+interface Ethernet1/1
+  ip pim sparse-mode
+
+interface Ethernet1/2
+  ip pim sparse-mode
+
+interface Ethernet1/3
+  ip pim sparse-mode
+
+interface Ethernet1/4
+  ip pim sparse-mode
+
+```
+### Проверка настройки VXLAN: Настройка Vlan, vlan-to-VXLAN mapping, настройка nve интерфейса на VTEP, настройка multicast group для VNI
+```
+Leaf1# show run int nve 1
+
+interface nve1
+  no shutdown
+  source-interface loopback0
+  member vni 8000 mcast-group 239.1.1.1
+
+Leaf1# show run vlan 100
+
+vlan 100
+vlan 100
+  vn-segment 8000
+  
+Leaf1# show run int lo0
+
+interface loopback0
+  ip address 10.255.1.11/32
+  ip address 10.0.1.11/32 secondary
+  ip router ospf 1 area 0.0.0.0
+  ip pim sparse-mode
+
+```
+```
+Leaf2# show run interface nve 1
+
+interface nve1
+  no shutdown
+  source-interface loopback0
+  member vni 8000 mcast-group 239.1.1.1
+
+Leaf2# show run vlan 100
+
+vlan 100
+vlan 100
+  vn-segment 8000
+
+
+Leaf2# show run interface loopback 0
+
+interface loopback0
+  ip address 10.255.1.12/32
+  ip address 10.0.1.11/32 secondary
+  ip router ospf 1 area 0.0.0.0
+  ip pim sparse-mode
+
+```
+```
+Leaf3# show run int nve 1
+
+interface nve1
+  no shutdown
+  source-interface loopback0
+  member vni 8000 mcast-group 239.1.1.1
+
+Leaf3# show run vlan 100
+
+vlan 100
+vlan 100
+  vn-segment 8000
+
+```
+### Проверка корректной работы VXLAN через multicast (наличие нужной multucast group в {*,G} и {S,G} нотациях, проверка активности nve peers, пинг между клиентами в широковещательном домене, подключенные к разных leaf коммутаторам и разным Spine)
+```
+Leaf1# show ip mroute
+IP Multicast Routing Table for VRF "default"
+
+(*, 232.0.0.0/8), uptime: 02:25:29, pim ip
+  Incoming interface: Null, RPF nbr: 0.0.0.0
+  Outgoing interface list: (count: 0)
+
+
+(*, 239.1.1.0/24), bidir, uptime: 02:25:29, pim ip
+  Incoming interface: Ethernet1/2, RPF nbr: 10.255.1.102
+  Outgoing interface list: (count: 1)
+    Ethernet1/2, uptime: 02:25:29, pim, (RPF)
+
+
+(*, 239.1.1.1/32), bidir, uptime: 02:25:29, nve ip pim
+  Incoming interface: Ethernet1/2, RPF nbr: 10.255.1.102
+  Outgoing interface list: (count: 2)
+    Ethernet1/2, uptime: 02:25:29, pim, (RPF)
+    nve1, uptime: 02:25:29, nve
+
+Leaf1# show nve peers
+Interface Peer-IP          State LearnType Uptime   Router-Mac
+--------- ---------------  ----- --------- -------- -----------------
+nve1      10.255.1.13      Up    DP        02:20:33 n/a
+
+Leaf1# show nve vni 8000 detail
+VNI: 8000
+  NVE-Interface       : nve1
+  Mcast-Addr          : 239.1.1.1
+  VNI State           : Up
+  Mode                : data-plane
+  VNI Type            : L2 [100]
+  VNI Flags           :
+  Provision State     : vni-add-complete
+  Vlan-BD             : 100
+  SVI State           : n/a
+
+```
+```
+Leaf3# show ip mroute
+IP Multicast Routing Table for VRF "default"
+
+(*, 232.0.0.0/8), uptime: 02:26:41, pim ip
+  Incoming interface: Null, RPF nbr: 0.0.0.0
+  Outgoing interface list: (count: 0)
+
+
+(*, 239.1.1.0/24), bidir, uptime: 02:26:41, pim ip
+  Incoming interface: Ethernet1/2, RPF nbr: 10.255.1.102
+  Outgoing interface list: (count: 1)
+    Ethernet1/2, uptime: 02:26:41, pim, (RPF)
+
+
+(*, 239.1.1.1/32), bidir, uptime: 02:26:41, nve ip pim
+  Incoming interface: Ethernet1/2, RPF nbr: 10.255.1.102
+  Outgoing interface list: (count: 2)
+    Ethernet1/2, uptime: 02:26:41, pim, (RPF)
+    nve1, uptime: 02:26:41, nve
+
+Leaf3# show nve peers
+Interface Peer-IP          State LearnType Uptime   Router-Mac
+--------- ---------------  ----- --------- -------- -----------------
+nve1      10.0.1.11        Up    DP        02:21:37 n/a
+
+Leaf3# show nve vni 8000 detail
+VNI: 8000
+  NVE-Interface       : nve1
+  Mcast-Addr          : 239.1.1.1
+  VNI State           : Up
+  Mode                : data-plane
+  VNI Type            : L2 [100]
+  VNI Flags           :
+  Provision State     : vni-add-complete
+  Vlan-BD             : 100
+  SVI State           : n/a
+
+```
+```
+Spine2# show ip mroute
+IP Multicast Routing Table for VRF "default"
+
+(*, 232.0.0.0/8), uptime: 02:28:26, pim ip
+  Incoming interface: Null, RPF nbr: 0.0.0.0
+  Outgoing interface list: (count: 0)
+
+
+(*, 239.1.1.0/24), bidir, uptime: 02:24:38, pim ip
+  Incoming interface: loopback1, RPF nbr: 10.1.1.1
+  Outgoing interface list: (count: 0)
+
+
+(*, 239.1.1.1/32), bidir, uptime: 02:24:38, pim ip
+  Incoming interface: loopback1, RPF nbr: 10.1.1.1
+  Outgoing interface list: (count: 3)
+    Ethernet1/4, uptime: 02:24:38, pim
+    Ethernet1/3, uptime: 02:24:38, pim
+    Ethernet1/2, uptime: 02:24:38, pim
+
+```
+```
+Client1#show run int vlan 100
+
+interface Vlan100
+ mac-address 0000.0000.0101
+ ip address 10.10.100.10 255.255.255.0
+
+Client1#ping 10.10.100.15
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.10.100.15, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 21/26/30 ms
+
+Client2#show run int vlan 100
+
+interface Vlan100
+ mac-address 0000.0000.2222
+ ip address 10.10.100.15 255.255.255.0
+end
+
+Client2#ping 10.10.100.10
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.10.100.10, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 23/32/44 ms
+
 ```
