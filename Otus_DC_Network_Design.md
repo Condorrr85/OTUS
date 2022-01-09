@@ -6,6 +6,7 @@
 4. [Построение Underlay сети(BGP)](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#%D0%BF%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B5%D0%BD%D0%B8%D0%B5-underlay-%D1%81%D0%B5%D1%82%D0%B8bgp)
 5. [Multicast PIM (Sparse)](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#multicast-pim-sparse)
 6. [VXLAN/Multicast](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#vxlanmulticast)
+7. [VxLAN. Route type 2](https://github.com/Condorrr85/OTUS/blob/main/Otus_DC_Network_Design.md#vxlan-route-type-2)
 # Технологии построения фабрик 
 
 ## _Домашнее задание №1_
@@ -1013,7 +1014,7 @@ Success rate is 100 percent (5/5), round-trip min/avg/max = 23/32/44 ms
 - План работы, адресное пространство, схема сети, настройки - зафиксированы в документации.
 
 
-![Scheme](VXLAN route type 2.png)
+![Scheme](https://github.com/Condorrr85/OTUS/blob/main/VXLAN%20route%20type%202.PNG)
 
 **Настройка NEXUS:**
 
@@ -1829,3 +1830,82 @@ Route Distinguisher: 10.255.1.13:32967    (L2VNI 9000)
 
 
 Проверка связности между клиентами в первой зоне:
+</code></pre>
+</details>
+<details>
+<summary>VPC12</summary>
+<pre><code>
+VPCS> ip 10.10.100.10 255.255.255.0 10.10.100.254
+Checking for duplicate address...
+PC1 : 10.10.100.10 255.255.255.0 gateway 10.10.100.254
+
+VPCS>
+VPCS> ping 10.10.100.254
+
+84 bytes from 10.10.100.254 icmp_seq=1 ttl=255 time=30.357 ms
+84 bytes from 10.10.100.254 icmp_seq=2 ttl=255 time=6.918 ms
+^C
+VPCS> ping 10.10.100.20
+
+84 bytes from 10.10.100.20 icmp_seq=1 ttl=64 time=44.957 ms
+84 bytes from 10.10.100.20 icmp_seq=2 ttl=64 time=24.115 ms
+84 bytes from 10.10.100.20 icmp_seq=3 ttl=64 time=27.472 ms
+84 bytes from 10.10.100.20 icmp_seq=4 ttl=64 time=21.649 ms
+84 bytes from 10.10.100.20 icmp_seq=5 ttl=64 time=21.290 ms
+</code></pre>
+</details>
+</code></pre>
+</details>
+<details>
+<summary>VPC13</summary>
+<pre><code>
+VPCS> ip 10.10.200.10 255.255.255.0 10.10.200.254
+Checking for duplicate address...
+PC1 : 10.10.200.10 255.255.255.0 gateway 10.10.200.254
+
+VPCS>
+VPCS> ping 10.10.200.254
+
+10.10.200.254 icmp_seq=1 timeout
+84 bytes from 10.10.200.254 icmp_seq=2 ttl=255 time=7.481 ms
+84 bytes from 10.10.200.254 icmp_seq=3 ttl=255 time=25.172 ms
+^C
+VPCS> ping 10.10.200.20
+
+84 bytes from 10.10.200.20 icmp_seq=1 ttl=64 time=26.299 ms
+84 bytes from 10.10.200.20 icmp_seq=2 ttl=64 time=29.568 ms
+84 bytes from 10.10.200.20 icmp_seq=3 ttl=64 time=31.852 ms
+84 bytes from 10.10.200.20 icmp_seq=4 ttl=64 time=29.311 ms
+84 bytes from 10.10.200.20 icmp_seq=5 ttl=64 time=29.753 ms
+</code></pre>
+</details>
+</code></pre>
+</details>
+<details>
+<summary>VPC14</summary>
+<pre><code>
+VPCS> ip 10.10.100.20 255.255.255.0 10.10.100.254
+Checking for duplicate address...
+PC1 : 10.10.100.20 255.255.255.0 gateway 10.10.100.254
+
+VPCS> ping 10.10.100.254
+
+84 bytes from 10.10.100.254 icmp_seq=1 ttl=255 time=22.312 ms
+84 bytes from 10.10.100.254 icmp_seq=2 ttl=255 time=9.459 ms
+^C
+VPCS> ping 10.10.100.10
+
+84 bytes from 10.10.100.10 icmp_seq=1 ttl=64 time=29.747 ms
+84 bytes from 10.10.100.10 icmp_seq=2 ttl=64 time=32.468 ms
+^C
+VPCS> ping 10.10.100.10
+
+84 bytes from 10.10.100.10 icmp_seq=1 ttl=64 time=25.230 ms
+84 bytes from 10.10.100.10 icmp_seq=2 ttl=64 time=35.162 ms
+</code></pre>
+</details>
+Вывод:
+
+1. Настроен BGP peering между Leaf и Spine в AF l2vpn evpn
+2. Spine работает в качестве route-reflector
+3. Есть связность между VPC в одном VNI, подключенных к разным Leaf\Spine
