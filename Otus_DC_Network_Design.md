@@ -1001,3 +1001,831 @@ Sending 5, 100-byte ICMP Echos to 10.10.100.10, timeout is 2 seconds:
 Success rate is 100 percent (5/5), round-trip min/avg/max = 23/32/44 ms
 
 ```
+
+# VxLAN. Route type 2
+## Домашнее задание №6
+
+## План работ
+
+- Настроить BGP peering между Leaf и Spine в AF l2vpn evpn;
+- Spine работает в качестве route-reflector;
+- Настроена связанность между клиентами в первой зоне;
+- План работы, адресное пространство, схема сети, настройки - зафиксированы в документации.
+
+
+![Scheme](VXLAN route type 2.png)
+
+**Настройка NEXUS:**
+
+<details>
+<summary>Spine1</summary>
+<pre><code>
+conf t
+!
+hostname Spine1
+!
+nv overlay evpn
+feature ospf
+feature bgp
+feature nv overlay
+!
+interface Ethernet1/1
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/2
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/3
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/4
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface loopback0
+  ip address 10.255.1.101/32
+  ip router ospf 1 area 0.0.0.0
+!
+interface loopback1
+  ip address 10.1.1.1/32
+  ip router ospf 1 area 0.0.0.0
+!
+line console
+  exec-timeout 0
+line vty
+  exec-timeout 0
+!
+router ospf 1
+  router-id 10.255.1.101
+ !
+router bgp 65000
+  template peer LEAF
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+      route-reflector-client
+  neighbor 10.255.1.11
+    inherit peer LEAF
+  neighbor 10.255.1.12
+    inherit peer LEAF
+  neighbor 10.255.1.13
+    inherit peer LEAF
+ !
+end
+copy run star
+</code></pre>
+</details>
+<details>
+<summary>Spine2</summary>
+<pre><code>
+conf t
+!
+hostname Spine2
+!
+nv overlay evpn
+feature ospf
+feature bgp
+feature nv overlay
+
+!
+interface Ethernet1/1
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/2
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/3
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/4
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface loopback0
+  ip address 10.255.1.102/32
+  ip router ospf 1 area 0.0.0.0
+!
+interface loopback1
+  ip address 10.1.1.1/32
+  ip router ospf 1 area 0.0.0.0
+!
+line console
+  exec-timeout 0
+line vty
+  exec-timeout 0
+!
+router ospf 1
+  router-id 10.255.1.102
+!
+router bgp 65000
+  template peer LEAF
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+      route-reflector-client
+  neighbor 10.255.1.11
+    inherit peer LEAF
+  neighbor 10.255.1.12
+    inherit peer LEAF
+  neighbor 10.255.1.13
+    inherit peer LEAF
+!
+end
+copy run star
+</code></pre>
+</details>
+<details>
+<summary>Leaf1</summary>
+<pre><code>
+conf t
+!
+hostname Leaf1
+!
+nv overlay evpn
+feature ospf
+feature bgp
+feature interface-vlan
+feature vn-segment-vlan-based
+feature lacp
+feature vpc
+feature nv overlay
+!
+fabric forwarding anycast-gateway-mac 0000.0000.1111
+vlan 1,100,200
+vlan 100
+  vn-segment 8000
+vlan 200
+  vn-segment 9000
+!
+vpc domain 1
+  peer-switch
+  peer-keepalive destination 172.16.1.2 source 172.16.1.1 vrf VPC
+  peer-gateway
+  ip arp synchronize
+!
+interface Vlan100
+  no shutdown
+  no ip redirects
+  ip address 10.10.100.254/24
+  no ipv6 redirects
+  fabric forwarding mode anycast-gateway
+!
+interface Vlan200
+  no shutdown
+  no ip redirects
+  ip address 10.10.200.254/24
+  no ipv6 redirects
+  fabric forwarding mode anycast-gateway
+!
+interface port-channel1
+  switchport mode trunk
+  spanning-tree port type network
+  no lacp suspend-individual
+  vpc peer-link
+!
+interface port-channel2
+  switchport mode trunk
+  vpc 1
+!
+interface nve1
+  no shutdown
+  host-reachability protocol bgp
+  source-interface loopback1
+  member vni 8000
+    ingress-replication protocol bgp
+  member vni 9000
+    ingress-replication protocol bgp
+!
+interface Ethernet1/1
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/2
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/3
+  no switchport
+  vrf member VPC
+  ip address 172.16.1.1/30
+  no shutdown
+!
+interface Ethernet1/4
+  switchport mode trunk
+  channel-group 1 mode active
+!
+interface Ethernet1/5
+  switchport mode trunk
+  channel-group 2 mode active
+!
+interface Ethernet1/6
+  switchport mode trunk
+  channel-group 1 mode active
+!
+interface loopback0
+  ip address 10.255.1.11/32
+  ip router ospf 1 area 0.0.0.0
+!
+interface loopback1
+  ip address 10.100.1.11/32
+  ip address 10.0.1.11/32 secondary
+  ip router ospf 1 area 0.0.0.0
+!
+line console
+  exec-timeout 0
+line vty
+  exec-timeout 0
+!
+router ospf 1
+  router-id 10.255.1.11
+!
+router bgp 65000
+  template peer SPINE
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  neighbor 10.255.1.101
+    inherit peer SPINE
+  neighbor 10.255.1.102
+    inherit peer SPINE
+!
+end
+copy run star
+</code></pre>
+</details>
+<details>
+<summary>Leaf2</summary>
+<pre><code>
+configure terminal
+!
+hostname Leaf2
+!
+nv overlay evpn
+feature ospf
+feature bgp
+feature isis
+feature interface-vlan
+feature vn-segment-vlan-based
+feature lacp
+feature vpc
+feature nv overlay
+!
+fabric forwarding anycast-gateway-mac 0000.0000.1111
+vlan 1,100,200
+vlan 100
+  vn-segment 8000
+vlan 200
+  vn-segment 9000
+!
+vpc domain 1
+  peer-switch
+  peer-keepalive destination 172.16.1.1 source 172.16.1.2 vrf VPC
+  peer-gateway
+  ip arp synchronize
+!
+interface Vlan100
+  no shutdown
+  no ip redirects
+  ip address 10.10.100.254/24
+  no ipv6 redirects
+  fabric forwarding mode anycast-gateway
+!
+interface Vlan200
+  no shutdown
+  no ip redirects
+  ip address 10.10.200.254/24
+  no ipv6 redirects
+  fabric forwarding mode anycast-gateway
+!
+interface port-channel1
+  switchport mode trunk
+  spanning-tree port type network
+  no lacp suspend-individual
+  vpc peer-link
+!
+interface port-channel2
+  switchport mode trunk
+  no lacp suspend-individual
+  vpc 1
+!
+interface nve1
+  no shutdown
+  host-reachability protocol bgp
+  source-interface loopback1
+  member vni 8000
+    ingress-replication protocol bgp
+  member vni 9000
+    ingress-replication protocol bgp
+!
+interface Ethernet1/1
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/2
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/3
+  no switchport
+  vrf member VPC
+  ip address 172.16.1.2/30
+  no shutdown
+!
+interface Ethernet1/4
+  switchport mode trunk
+  channel-group 1 mode active
+!
+interface Ethernet1/5
+  switchport mode trunk
+  channel-group 2 mode active
+!
+interface Ethernet1/6
+  switchport mode trunk
+  channel-group 1 mode active
+!
+interface loopback0
+  ip address 10.255.1.12/32
+  ip router ospf 1 area 0.0.0.0
+!
+interface loopback1
+  ip address 10.100.1.12/32
+  ip address 10.0.1.11/32 secondary
+  ip router ospf 1 area 0.0.0.0
+!
+line console
+  exec-timeout 0
+line vty
+  exec-timeout 0
+!
+router ospf 1
+  router-id 10.255.1.12
+!
+router bgp 65000
+  template peer SPINE
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  neighbor 10.255.1.101
+    inherit peer SPINE
+  neighbor 10.255.1.102
+    inherit peer SPINE
+!
+end
+copy run star
+</code></pre>
+</details>
+<details>
+<summary>Leaf3</summary>
+<pre><code>
+configure terminal
+!
+hostname Leaf3
+!
+nv overlay evpn
+feature ospf
+feature bgp
+feature interface-vlan
+feature vn-segment-vlan-based
+feature nv overlay
+!
+fabric forwarding anycast-gateway-mac 0000.0000.1111
+vlan 1,100,200
+vlan 100
+  vn-segment 8000
+vlan 200
+  vn-segment 9000
+!
+interface Vlan100
+  no shutdown
+  ip address 10.10.100.254/24
+  fabric forwarding mode anycast-gateway
+!
+interface Vlan200
+  no shutdown
+  ip address 10.10.200.254/24
+  fabric forwarding mode anycast-gateway
+!
+interface nve1
+  no shutdown
+  host-reachability protocol bgp
+  source-interface loopback1
+  member vni 8000
+    ingress-replication protocol bgp
+  member vni 9000
+    ingress-replication protocol bgp
+!
+interface Ethernet1/1
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/2
+  no switchport
+  medium p2p
+  ip unnumbered loopback0
+  ip ospf network point-to-point
+  ip router ospf 1 area 0.0.0.0
+  no shutdown
+!
+interface Ethernet1/3
+  switchport mode trunk
+!
+interface loopback0
+  ip address 10.255.1.13/32
+  ip router ospf 1 area 0.0.0.0
+!
+interface loopback1
+  ip address 10.100.1.13/32
+  ip router ospf 1 area 0.0.0.0
+!
+line console
+  exec-timeout 0
+line vty
+  exec-timeout 0
+!
+router ospf 1
+  router-id 10.255.1.13
+!
+router bgp 65000
+  template peer SPINE
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  neighbor 10.255.1.101
+    inherit peer SPINE
+  neighbor 10.255.1.102
+    inherit peer SPINE
+!
+end
+copy run star
+</code></pre>
+</details>
+
+проверим, что bgp peering между Leaf и Spine устройствами в AF L2vpn evpn работает корректно:
+<details>
+<summary>Spine1</summary>
+<pre><code>
+Spine1# show bgp l2vpn evpn summary
+BGP summary information for VRF default, address family L2VPN EVPN
+BGP router identifier 10.255.1.101, local AS number 65000
+BGP table version is 181, L2VPN EVPN config peers 3, capable peers 3
+14 network entries and 14 paths using 3080 bytes of memory
+BGP attribute entries [7/1148], BGP AS path entries [0/0]
+BGP community entries [0/0], BGP clusterlist entries [0/0]
+!
+Neighbor        V    AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.255.1.11     4 65000     181     173      181    0    0 00:34:55 4
+10.255.1.12     4 65000     170     177      181    0    0 00:34:43 4
+10.255.1.13     4 65000     189     168      181    0    0 02:04:11 6
+</code></pre>
+</details>
+<details>
+<summary>Spine2</summary>
+<pre><code>
+Spine2# show bgp l2vpn evpn summary
+BGP summary information for VRF default, address family L2VPN EVPN
+BGP router identifier 10.255.1.102, local AS number 65000
+BGP table version is 203, L2VPN EVPN config peers 3, capable peers 3
+14 network entries and 14 paths using 3080 bytes of memory
+BGP attribute entries [7/1148], BGP AS path entries [0/0]
+BGP community entries [0/0], BGP clusterlist entries [0/0]
+!
+Neighbor        V    AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.255.1.11     4 65000     202     194      203    0    0 00:48:56 4
+10.255.1.12     4 65000     193     198      203    0    0 00:48:43 4
+10.255.1.13     4 65000     217     189      203    0    0 02:20:06 6
+</code></pre>
+</details>
+<details>
+<summary>Leaf1</summary>
+<pre><code>
+Leaf1# show bgp l2vpn evpn summary
+BGP summary information for VRF default, address family L2VPN EVPN
+BGP router identifier 10.255.1.11, local AS number 65000
+BGP table version is 308, L2VPN EVPN config peers 2, capable peers 2
+16 network entries and 22 paths using 3520 bytes of memory
+BGP attribute entries [11/1804], BGP AS path entries [0/0]
+BGP community entries [0/0], BGP clusterlist entries [2/8]
+!
+Neighbor        V    AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.255.1.101    4 65000     275     170      308    0    0 00:49:53 6
+10.255.1.102    4 65000     277     171      308    0    0 00:49:53 6
+</code></pre>
+</details>
+<details>
+<summary>Leaf2</summary>
+<pre><code>
+Leaf2# show bgp l2vpn evpn summary
+BGP summary information for VRF default, address family L2VPN EVPN
+BGP router identifier 10.255.1.12, local AS number 65000
+BGP table version is 308, L2VPN EVPN config peers 2, capable peers 2
+16 network entries and 22 paths using 3520 bytes of memory
+BGP attribute entries [11/1804], BGP AS path entries [0/0]
+BGP community entries [0/0], BGP clusterlist entries [2/8]
+
+!
+Neighbor        V    AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.255.1.101    4 65000     285     166      308    0    0 00:50:28 6
+10.255.1.102    4 65000     287     169      308    0    0 00:50:27 6
+</code></pre>
+</details>
+<details>
+<summary>Leaf3</summary>
+<pre><code>
+Leaf3# show bgp l2vpn evpn summary
+BGP summary information for VRF default, address family L2VPN EVPN
+BGP router identifier 10.255.1.13, local AS number 65000
+BGP table version is 471, L2VPN EVPN config peers 2, capable peers 2
+18 network entries and 30 paths using 4456 bytes of memory
+BGP attribute entries [16/2624], BGP AS path entries [0/0]
+BGP community entries [0/0], BGP clusterlist entries [4/16]
+!
+Neighbor        V    AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.255.1.101    4 65000     258     179      471    0    0 02:20:44 8
+10.255.1.102    4 65000     260     183      471    0    0 02:22:39 8
+</code></pre>
+</details>
+Проверка nve peers и таблицы маршрутизации для BGP EVPN:
+<details>
+<summary>Leaf1</summary>
+<pre><code>
+Leaf1# show nve peers
+Interface Peer-IP          State LearnType Uptime   Router-Mac
+--------- ---------------  ----- --------- -------- -----------------
+nve1      10.100.1.13      Up    CP        02:32:19 n/a
+!
+Leaf1# show bgp l2vpn evpn
+BGP routing table information for VRF default, address family L2VPN EVPN
+BGP table version is 342, Local Router ID is 10.255.1.11
+Status: s-suppressed, x-deleted, S-stale, d-dampened, h-history, *-valid, >-best
+Path type: i-internal, e-external, c-confed, l-local, a-aggregate, r-redist, I-i
+njected
+Origin codes: i - IGP, e - EGP, ? - incomplete, | - multipath, & - backup, 2 - b
+est2
+
+   Network            Next Hop            Metric     LocPrf     Weight Path
+Route Distinguisher: 10.255.1.11:32867    (L2VNI 8000)
+*>l[2]:[0]:[0]:[48]:[0050.7966.680c]:[0]:[0.0.0.0]/216
+                      10.0.1.11                         100      32768 i
+*>i[2]:[0]:[0]:[48]:[0050.7966.680e]:[0]:[0.0.0.0]/216
+                      10.100.1.13                       100          0 i
+*>l[2]:[0]:[0]:[48]:[0050.7966.680c]:[32]:[10.10.100.10]/248
+                      10.0.1.11                         100      32768 i
+*>i[2]:[0]:[0]:[48]:[0050.7966.680e]:[32]:[10.10.100.20]/248
+                      10.100.1.13                       100          0 i
+*>l[3]:[0]:[32]:[10.0.1.11]/88
+                      10.0.1.11                         100      32768 i
+*>i[3]:[0]:[32]:[10.100.1.13]/88
+                      10.100.1.13                       100          0 i
+
+Route Distinguisher: 10.255.1.11:32967    (L2VNI 9000)
+*>i[2]:[0]:[0]:[48]:[0050.7966.680f]:[0]:[0.0.0.0]/216
+                      10.100.1.13                       100          0 i
+*>i[2]:[0]:[0]:[48]:[0050.7966.680f]:[32]:[10.10.200.20]/248
+                      10.100.1.13                       100          0 i
+*>l[3]:[0]:[32]:[10.0.1.11]/88
+                      10.0.1.11                         100      32768 i
+*>i[3]:[0]:[32]:[10.100.1.13]/88
+                      10.100.1.13                       100          0 i
+
+Route Distinguisher: 10.255.1.13:32867
+*>i[2]:[0]:[0]:[48]:[0050.7966.680e]:[0]:[0.0.0.0]/216
+                      10.100.1.13                       100          0 i
+* i                   10.100.1.13                       100          0 i
+* i[2]:[0]:[0]:[48]:[0050.7966.680e]:[32]:[10.10.100.20]/248
+                      10.100.1.13                       100          0 i
+*>i                   10.100.1.13                       100          0 i
+*>i[3]:[0]:[32]:[10.100.1.13]/88
+                      10.100.1.13                       100          0 i
+* i                   10.100.1.13                       100          0 i
+
+Route Distinguisher: 10.255.1.13:32967
+* i[2]:[0]:[0]:[48]:[0050.7966.680f]:[0]:[0.0.0.0]/216
+                      10.100.1.13                       100          0 i
+*>i                   10.100.1.13                       100          0 i
+* i[2]:[0]:[0]:[48]:[0050.7966.680f]:[32]:[10.10.200.20]/248
+                      10.100.1.13                       100          0 i
+*>i                   10.100.1.13                       100          0 i
+* i[3]:[0]:[32]:[10.100.1.13]/88
+                      10.100.1.13                       100          0 i
+*>i                   10.100.1.13                       100          0 i
+
+</code></pre>
+</details>
+<details>
+<summary>Leaf2</summary>
+<pre><code>
+Leaf2# show nve peers
+Interface Peer-IP          State LearnType Uptime   Router-Mac
+--------- ---------------  ----- --------- -------- -----------------
+nve1      10.100.1.13      Up    CP        02:34:55 n/a
+!
+Leaf2# show bgp l2vpn evpn
+BGP routing table information for VRF default, address family L2VPN EVPN
+BGP table version is 353, Local Router ID is 10.255.1.12
+Status: s-suppressed, x-deleted, S-stale, d-dampened, h-history, *-valid, >-best
+Path type: i-internal, e-external, c-confed, l-local, a-aggregate, r-redist, I-i
+njected
+Origin codes: i - IGP, e - EGP, ? - incomplete, | - multipath, & - backup, 2 - b
+est2
+
+   Network            Next Hop            Metric     LocPrf     Weight Path
+Route Distinguisher: 10.100.1.12:32867    (L2VNI 8000)
+*>l[2]:[0]:[0]:[48]:[0050.7966.680c]:[0]:[0.0.0.0]/216
+                      10.0.1.11                         100      32768 i
+*>i[2]:[0]:[0]:[48]:[0050.7966.680e]:[0]:[0.0.0.0]/216
+                      10.100.1.13                       100          0 i
+*>l[2]:[0]:[0]:[48]:[0050.7966.680c]:[32]:[10.10.100.10]/248
+                      10.0.1.11                         100      32768 i
+*>i[2]:[0]:[0]:[48]:[0050.7966.680e]:[32]:[10.10.100.20]/248
+                      10.100.1.13                       100          0 i
+*>l[3]:[0]:[32]:[10.0.1.11]/88
+                      10.0.1.11                         100      32768 i
+*>i[3]:[0]:[32]:[10.100.1.13]/88
+                      10.100.1.13                       100          0 i
+
+Route Distinguisher: 10.255.1.12:32967    (L2VNI 9000)
+*>i[2]:[0]:[0]:[48]:[0050.7966.680f]:[0]:[0.0.0.0]/216
+                      10.100.1.13                       100          0 i
+*>i[2]:[0]:[0]:[48]:[0050.7966.680f]:[32]:[10.10.200.20]/248
+                      10.100.1.13                       100          0 i
+*>l[3]:[0]:[32]:[10.0.1.11]/88
+                      10.0.1.11                         100      32768 i
+*>i[3]:[0]:[32]:[10.100.1.13]/88
+                      10.100.1.13                       100          0 i
+
+Route Distinguisher: 10.255.1.13:32867
+*>i[2]:[0]:[0]:[48]:[0050.7966.680e]:[0]:[0.0.0.0]/216
+                      10.100.1.13                       100          0 i
+* i                   10.100.1.13                       100          0 i
+*>i[2]:[0]:[0]:[48]:[0050.7966.680e]:[32]:[10.10.100.20]/248
+                      10.100.1.13                       100          0 i
+* i                   10.100.1.13                       100          0 i
+*>i[3]:[0]:[32]:[10.100.1.13]/88
+                      10.100.1.13                       100          0 i
+* i                   10.100.1.13                       100          0 i
+
+Route Distinguisher: 10.255.1.13:32967
+*>i[2]:[0]:[0]:[48]:[0050.7966.680f]:[0]:[0.0.0.0]/216
+                      10.100.1.13                       100          0 i
+* i                   10.100.1.13                       100          0 i
+*>i[2]:[0]:[0]:[48]:[0050.7966.680f]:[32]:[10.10.200.20]/248
+                      10.100.1.13                       100          0 i
+* i                   10.100.1.13                       100          0 i
+* i[3]:[0]:[32]:[10.100.1.13]/88
+                      10.100.1.13                       100          0 i
+*>i                   10.100.1.13                       100          0 i
+
+</code></pre>
+</details>
+<details>
+<summary>Leaf3</summary>
+<pre><code>
+Leaf3# show nve peers
+Interface Peer-IP          State LearnType Uptime   Router-Mac
+--------- ---------------  ----- --------- -------- -----------------
+nve1      10.0.1.11        Up    CP        02:36:07 n/a
+!
+Leaf3# show bgp l2vpn evpn
+BGP routing table information for VRF default, address family L2VPN EVPN
+BGP table version is 493, Local Router ID is 10.255.1.13
+Status: s-suppressed, x-deleted, S-stale, d-dampened, h-history, *-valid, >-best
+Path type: i-internal, e-external, c-confed, l-local, a-aggregate, r-redist, I-i
+njected
+Origin codes: i - IGP, e - EGP, ? - incomplete, | - multipath, & - backup, 2 - b
+est2
+
+   Network            Next Hop            Metric     LocPrf     Weight Path
+Route Distinguisher: 10.100.1.12:32867
+* i[2]:[0]:[0]:[48]:[0050.7966.680c]:[0]:[0.0.0.0]/216
+                      10.0.1.11                         100          0 i
+*>i                   10.0.1.11                         100          0 i
+* i[2]:[0]:[0]:[48]:[0050.7966.680c]:[32]:[10.10.100.10]/248
+                      10.0.1.11                         100          0 i
+*>i                   10.0.1.11                         100          0 i
+*>i[3]:[0]:[32]:[10.0.1.11]/88
+                      10.0.1.11                         100          0 i
+* i                   10.0.1.11                         100          0 i
+
+Route Distinguisher: 10.255.1.11:32867
+* i[2]:[0]:[0]:[48]:[0050.7966.680c]:[0]:[0.0.0.0]/216
+                      10.0.1.11                         100          0 i
+*>i                   10.0.1.11                         100          0 i
+* i[2]:[0]:[0]:[48]:[0050.7966.680c]:[32]:[10.10.100.10]/248
+                      10.0.1.11                         100          0 i
+*>i                   10.0.1.11                         100          0 i
+* i[3]:[0]:[32]:[10.0.1.11]/88
+                      10.0.1.11                         100          0 i
+*>i                   10.0.1.11                         100          0 i
+
+Route Distinguisher: 10.255.1.11:32967
+* i[3]:[0]:[32]:[10.0.1.11]/88
+                      10.0.1.11                         100          0 i
+*>i                   10.0.1.11                         100          0 i
+
+Route Distinguisher: 10.255.1.12:32967
+* i[3]:[0]:[32]:[10.0.1.11]/88
+                      10.0.1.11                         100          0 i
+*>i                   10.0.1.11                         100          0 i
+
+Route Distinguisher: 10.255.1.13:32867    (L2VNI 8000)
+* i[2]:[0]:[0]:[48]:[0050.7966.680c]:[0]:[0.0.0.0]/216
+                      10.0.1.11                         100          0 i
+*>i                   10.0.1.11                         100          0 i
+*>l[2]:[0]:[0]:[48]:[0050.7966.680e]:[0]:[0.0.0.0]/216
+                      10.100.1.13                       100      32768 i
+*>i[2]:[0]:[0]:[48]:[0050.7966.680c]:[32]:[10.10.100.10]/248
+                      10.0.1.11                         100          0 i
+* i                   10.0.1.11                         100          0 i
+*>l[2]:[0]:[0]:[48]:[0050.7966.680e]:[32]:[10.10.100.20]/248
+                      10.100.1.13                       100      32768 i
+*>i[3]:[0]:[32]:[10.0.1.11]/88
+                      10.0.1.11                         100          0 i
+* i                   10.0.1.11                         100          0 i
+*>l[3]:[0]:[32]:[10.100.1.13]/88
+                      10.100.1.13                       100      32768 i
+
+Route Distinguisher: 10.255.1.13:32967    (L2VNI 9000)
+*>l[2]:[0]:[0]:[48]:[0050.7966.680f]:[0]:[0.0.0.0]/216
+                      10.100.1.13                       100      32768 i
+*>l[2]:[0]:[0]:[48]:[0050.7966.680f]:[32]:[10.10.200.20]/248
+                      10.100.1.13                       100      32768 i
+*>i[3]:[0]:[32]:[10.0.1.11]/88
+                      10.0.1.11                         100          0 i
+* i                   10.0.1.11                         100          0 i
+*>l[3]:[0]:[32]:[10.100.1.13]/88
+                      10.100.1.13                       100      32768 i
+
+</code></pre>
+</details>
+
+
+
+Проверка связности между клиентами в первой зоне:
